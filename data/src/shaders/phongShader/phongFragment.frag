@@ -105,7 +105,10 @@ float PCSS(sampler2D shadowMap, vec4 coords){
 
 
 float useShadowMap(sampler2D shadowMap, vec4 shadowCoord){
-  return 1.0;
+    // float depth=texture2D(shadowMap,shadowCoord.xy).r; 
+    // return (depth<shadowCoord.z)?0.0:1.0;
+    // return 1.0;
+    return 1.0;
 }
 
 vec3 blinnPhong() {
