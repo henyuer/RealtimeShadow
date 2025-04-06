@@ -156,7 +156,13 @@ class MeshRender {
 				gl.uniform3fv(
 					this.shader.program.uniforms[k],
 					this.material.uniforms[k].value);
-			} else if (this.material.uniforms[k].type == '1f') {
+			}
+			else if (this.material.uniforms[k].type == '2fv') {
+				gl.uniform2fv(
+					this.shader.program.uniforms[k],
+					this.material.uniforms[k].value);
+			}
+			else if (this.material.uniforms[k].type == '1f') {
 				gl.uniform1f(
 					this.shader.program.uniforms[k],
 					this.material.uniforms[k].value);

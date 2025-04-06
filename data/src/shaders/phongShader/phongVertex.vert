@@ -21,5 +21,6 @@ void main(void) {
                 vec4(aVertexPosition, 1.0);
 
   vTextureCoord = aTextureCoord;
+  // vPositionFromLight =   vec4(aVertexPosition, 1.0);
   vPositionFromLight = uLightMVP * vec4(aVertexPosition, 1.0);
 }
