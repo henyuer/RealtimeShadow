@@ -17,11 +17,14 @@ varying highp vec3 vFragPos;
 varying highp vec3 vNormal;
 
 // Shadow map related variables
-#define NUM_SAMPLES 30
-#define BLOCKER_SEARCH_NUM_SAMPLES NUM_SAMPLES
+#define NUM_SAMPLES 100
+#define BLOCKER_SEARCH_NUM_SAMPLES 30
+#define BLOCKER_SEAREH_RADIUS_UV 0.007
 #define PCF_NUM_SAMPLES NUM_SAMPLES
 #define NUM_RINGS 10
 #define FILTER_NUM 5
+
+#define LIGHT_WIDTH_UV_SCALE 0.007
 
 #define EPS 1e-3
 #define PI 3.141592653589793
@@ -87,31 +90,33 @@ void uniformDiskSamples( const in vec2 randomSeed ) {
 }
 
 float findBlocker( sampler2D shadowMap,  vec2 uv, float zReceiver ) {
-	return 1.0;
+	float sumBlockerDepth=0.0;
+  int numBlcokersFound=0;
+  float searchRadius=BLOCKER_SEAREH_RADIUS_UV;
+  poissonDiskSamples(uv);
+
+  for(int i=0;i<BLOCKER_SEARCH_NUM_SAMPLES;i++)
+  {
+    vec2 offset=poissonDisk[i]*searchRadius;
+    vec2 sampleUV=uv+offset;
+
+    float blockerDepthSample=unpack(texture2D(shadowMap,sampleUV));
+
+    if(blockerDepthSample<zReceiver){
+      sumBlockerDepth+=blockerDepthSample;
+      numBlcokersFound++;
+    }
+  }
+  if(numBlcokersFound==0)
+    return 1.0;
+  return sumBlockerDepth/float(numBlcokersFound);
 }
-// float getShadowBias(float c, float filterRadiusUV){
-//   vec3 normal = normalize(vNormal);
-//   vec3 lightDir = normalize(uLightPos - vFragPos);
-//   float fragSize = (1. + ceil(filterRadiusUV)) * (uShadowMapSize.x / float(resolution) / 2.);
-//   return max(fragSize, fragSize * (1.0 - dot(normal, lightDir))) * c;
-// }
-// float useShadowMap(sampler2D shadowMap, vec4 shadowCoord, float biasC, float filterRadiusUV){
-//   float depth = unpack(texture2D(shadowMap, shadowCoord.xy));
-//   float cur_depth = shadowCoord.z;
-//   float bias = getShadowBias(biasC, filterRadiusUV);
-//   if(cur_depth - bias >= depth + EPS){
-//     return 0.;
-//   }
-//   else{
-//     return 1.0;
-//   }
-// }
 
 float useShadowMap(sampler2D shadowMap,vec4 shadowCoord)
 {
-  float depth=texture2D(shadowMap,shadowCoord.xy).r;
-  float bias=0.005;
-  return (depth+bias+EPS<shadowCoord.z)?0.:1.;
+  float depth=unpack(texture2D(shadowMap,shadowCoord.xy));
+  // float bias=0.005;
+  return (depth+EPS<shadowCoord.z)?0.:1.;
 }
 
 float PCF(sampler2D shadowMap, vec4 coords,float filterRadiusUV) {
@@ -119,7 +124,8 @@ float PCF(sampler2D shadowMap, vec4 coords,float filterRadiusUV) {
    float result=0.0;
 
    for(int i=0;i<NUM_SAMPLES;i++){
-      result += useShadowMap(shadowMap,vec4(coords.xy+poissonDisk[i]*filterRadiusUV,coords.z,1.0));
+      vec2 sampleUV=coords.xy+poissonDisk[i]*filterRadiusUV;
+      result += useShadowMap(shadowMap,vec4(sampleUV,coords.z,1.0));
     // result+=useShadowMap(shadowMap,vec4(coords.xy+poissonDisk[i]*filterRadiusUV,coords.z,1.0),biasC,filterRadiusUV);
    }
    result/=float(NUM_SAMPLES);
@@ -130,12 +136,19 @@ float PCF(sampler2D shadowMap, vec4 coords,float filterRadiusUV) {
 float PCSS(sampler2D shadowMap, vec4 coords){
 
   // STEP 1: avgblocker depth
+  vec2 uv=coords.xy;
+  float zReceiver=coords.z;
+  float avgBlockerDepth=findBlocker(shadowMap,uv,zReceiver);
 
   // STEP 2: penumbra size
+  float penumbraRadiusUV=0.0;
+  if(avgBlockerDepth>0.0 && avgBlockerDepth<zReceiver)
+  {
+    penumbraRadiusUV=(zReceiver-avgBlockerDepth)*LIGHT_WIDTH_UV_SCALE/avgBlockerDepth;
+  }
 
   // STEP 3: filtering
-  
-  return 1.0;
+  return PCF(shadowMap,coords,penumbraRadiusUV);
 
 }
 
@@ -173,12 +186,13 @@ void main(void) {
   float filterRadiusUV=float(FILTER_NUM)/float(resolution);
   float visibility;
   // visibility = useShadowMap(uShadowMap, vec4(shadowCoord, 1.0));
-  visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0),filterRadiusUV);
-  // visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
+  // visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0),filterRadiusUV);
+  visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
 
   vec3 phongColor = blinnPhong();
 
   gl_FragColor = vec4(phongColor * visibility, 1.0);
+  // gl_FragColor=vec4(visibility,visibility ,visibility ,1.0 )
   // gl_FragColor = vec4(phongColor, 1.0);
   // gl_FragColor=vec4(shadowCoord.x,0.0,0.0,1.0);
 }
