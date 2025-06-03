@@ -4,9 +4,11 @@ class ShadowMaterial extends Material {
         let lightMVP = light.CalcLightMVP(translate, scale);
 
         super({
-            'uLightMVP': { type: 'matrix4fv', value: lightMVP },
+            // 'uLightMVP': { type: 'matrix4fv', value: lightMVP },
 
         }, [], vertexShader, fragmentShader, light.fbo);
+        this.translate=translate;
+        this.scale=scale;
     }
 }
 

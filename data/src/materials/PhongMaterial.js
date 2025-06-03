@@ -11,10 +11,12 @@ class PhongMaterial extends Material {
             'uLightIntensity': { type: '3fv', value: lightIntensity },
             // Shadow
             'uShadowMap': { type: 'texture', value: light.fbo },
-            'uLightMVP': { type: 'matrix4fv', value: lightMVP },
+            // 'uLightMVP': { type: 'matrix4fv', value: lightMVP },
             'uShadowMapSize': { type: '2fv', value: [1000.0, 1000.0] },
             'resolution': { type: '1i', value: resolution }
         }, [], vertexShader, fragmentShader);
+        this.translate=translate;
+        this.scale=scale;
     }
 }
 

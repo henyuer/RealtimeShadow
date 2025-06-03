@@ -13,6 +13,19 @@ class DirectionalLight {
             console.log("无法设置帧缓冲区对象");
             return;
         }
+
+        this.augularSpeed=1.0;
+        this.radius=Math.sqrt((lightPos[0]-focalPoint[0])**2+(lightPos[1]-focalPoint[1])**2);
+        this.currentAngle=0;
+
+    }
+
+    lightMoveRound(deltaTime){
+        if(this.currentAngle>2*Math.PI)
+            this.currentAngle-=2*Math.PI;
+        this.currentAngle+=this.augularSpeed*deltaTime;
+        this.lightPos[0]=this.focalPoint[0]+this.radius*Math.sin(this.currentAngle);
+        this.lightPos[2]=this.focalPoint[2]+this.radius*Math.cos(this.currentAngle);
     }
 
     CalcLightMVP(translate, scale) {

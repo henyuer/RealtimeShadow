@@ -16,6 +16,8 @@ varying highp vec2 vTextureCoord;
 varying highp vec3 vFragPos;
 varying highp vec3 vNormal;
 
+// varying highp mat4 vLightMVP;
+
 // Shadow map related variables
 #define NUM_SAMPLES 100
 #define BLOCKER_SEARCH_NUM_SAMPLES 30
@@ -186,12 +188,17 @@ void main(void) {
   float filterRadiusUV=float(FILTER_NUM)/float(resolution);
   float visibility;
   // visibility = useShadowMap(uShadowMap, vec4(shadowCoord, 1.0));
-  // visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0),filterRadiusUV);
-  visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
+  visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0),filterRadiusUV);
+  // visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
 
   vec3 phongColor = blinnPhong();
 
   gl_FragColor = vec4(phongColor * visibility, 1.0);
+  // float wight=0.005;
+  // if (vLightMVP[0][0]!=0.0){
+  //   wight=vLightMVP[0][0];
+  // }
+  // gl_FragColor=vLightMVP[1]/wight;
   // gl_FragColor=vec4(visibility,visibility ,visibility ,1.0 )
   // gl_FragColor = vec4(phongColor, 1.0);
   // gl_FragColor=vec4(shadowCoord.x,0.0,0.0,1.0);

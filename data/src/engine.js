@@ -78,9 +78,20 @@ function GAMES202Main() {
 	}
 	createGUI();
 
-	function mainLoop(now) {
-		cameraControls.update();
+	let lastTime=0;
 
+	function mainLoop(currentTime) {
+		cameraControls.update();
+		if (lastTime===0){
+			lastTime=currentTime;
+			renderer.render();
+			requestAnimationFrame(mainLoop);
+			return;
+		}
+		const deltaTime=currentTime-lastTime;
+		lastTime=currentTime;
+		const cappedDeltaTime=Math.min(deltaTime/1000.0,0.1);
+		renderer.update(cappedDeltaTime);
 		renderer.render();
 		requestAnimationFrame(mainLoop);
 	}

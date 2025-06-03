@@ -17,6 +17,14 @@ class WebGLRenderer {
     addMeshRender(mesh) { this.meshes.push(mesh); }
     addShadowMeshRender(mesh) { this.shadowMeshes.push(mesh); }
 
+    update(deltaTime)
+    {
+        for (let i=0;i<this.lights.length;i++)
+        {
+            this.lights[i].entity.lightMoveRound(deltaTime);
+        }
+    }
+
     render() {
         const gl = this.gl;
 
@@ -37,6 +45,12 @@ class WebGLRenderer {
             // Shadow pass
             if (this.lights[l].entity.hasShadowMap == true) {
                 for (let i = 0; i < this.shadowMeshes.length; i++) {
+                    this.gl.useProgram(this.shadowMeshes[i].shader.program.glShaderProgram);
+                    let translate=this.shadowMeshes[i].material.translate;
+                    let scale=this.shadowMeshes[i].material.scale;
+                    let mvp=this.lights[l].entity.CalcLightMVP(translate,scale);
+                    this.gl.uniformMatrix4fv(this.shadowMeshes[i].shader.program.uniforms.uLightMVP,false,mvp);
+
                     this.shadowMeshes[i].draw(this.camera);
                 }
             }
@@ -45,8 +59,13 @@ class WebGLRenderer {
             for (let i = 0; i < this.meshes.length; i++) {
                 this.gl.useProgram(this.meshes[i].shader.program.glShaderProgram);
                 this.gl.uniform3fv(this.meshes[i].shader.program.uniforms.uLightPos, this.lights[l].entity.lightPos);
+                let translate=this.meshes[i].material.translate;
+                let scale=this.meshes[i].material.scale;
+                this.gl.uniformMatrix4fv(this.meshes[i].shader.program.uniforms.uLightMVP,false,this.lights[l].entity.CalcLightMVP(translate,scale));
                 this.meshes[i].draw(this.camera);
             }
         }
     }
+
+
 }
