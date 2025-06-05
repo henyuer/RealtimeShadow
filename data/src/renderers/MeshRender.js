@@ -187,15 +187,14 @@ class MeshRender {
 		if (this.material.frameBuffer != null) {
 			// Shadow map
 			gl.viewport(0.0, 0.0, resolution, resolution);
-			console.log(gl.checkFramebufferStatus(gl.FRAMEBUFFER));
+			gl.clearDepth(1.0); 
+			gl.clear(gl.DEPTH_BUFFER_BIT);
 		} else {
 			gl.viewport(0.0, 0.0, window.screen.width, window.screen.height);
 		}
 
 		gl.useProgram(this.shader.program.glShaderProgram);
 
-		// gl.getShaderParameter(this.shader.program.glShaderProgram, gl.COMPILE_STATUS)
-		// console.log(gl.getProgramParameter(this.shader.program.glShaderProgram, gl.LINK_STATUS));
 		// Bind geometry information
 		this.bindGeometryInfo();
 
@@ -205,8 +204,6 @@ class MeshRender {
 		// Bind material parameters
 		this.bindMaterialParameters();
 
-		gl.clearDepth(1.0); 
-		gl.clear(gl.DEPTH_BUFFER_BIT); 
 		// Draw
 		{
 			const vertexCount = this.mesh.count;
